@@ -1,13 +1,13 @@
 /* Statistik, filter, dan pembangunan graf. Semua angka dihitung dari model hasil worker. */
-/* Palet default kontras tinggi. Array/objek ini dimutasi di tempat oleh theme.js (kustomisasi warna). */
-export const ASPEK_COLOR = ['#7C3AED', '#DB2777', '#B45309'];
+/* Palet default (Pink Blush: pink, ungu, oranye lembut). Array/objek ini dimutasi di tempat oleh theme.js (kustomisasi warna). */
+export const ASPEK_COLOR = ['#9B6BDF', '#E5528A', '#F28C38'];
 export const BANDS = [
-  { id: 'full', label: '20 Ya', test: y => y === 20, color: '#047857' },
-  { id: 'high', label: '16–19 Ya', test: y => y >= 16 && y < 20, color: '#1D4ED8' },
-  { id: 'low', label: '≤15 Ya', test: y => y <= 15, color: '#C2410C' }
+  { id: 'full', label: '20 Ya', test: y => y === 20, color: '#D6336C' },
+  { id: 'high', label: '16–19 Ya', test: y => y >= 16 && y < 20, color: '#8E5BD4' },
+  { id: 'low', label: '≤15 Ya', test: y => y <= 15, color: '#F4A261' }
 ];
-export const KOHORT_COLORS = ['#6D28D9', '#BE185D', '#B45309', '#334155'];
-export const STATUS = { yes: '#047857', no: '#B91C1C' };
+export const KOHORT_COLORS = ['#8E5BD4', '#E5528A', '#F28C38', '#8A8FA8', '#2F9E8F', '#C77DBA'];
+export const STATUS = { yes: '#8E5BD4', no: '#F2784B' };
 
 /* Inisial dari SEMUA kata nama (maks 4 huruf agar muat di node): Santi Turyana Ali -> STA */
 export const initials = nama => {

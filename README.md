@@ -68,3 +68,6 @@ klik ganda: fokus tetangga · seret node: pindah dan dikunci (Lepas pin di Penga
 - **Filter**: tombol aspek (Pemahaman dasar / Persiapan / Kesiapan) aktif = solid + ✓, nonaktif = putus-putus.
 - **Kustomisasi warna**: Pengaturan → Warna & tampilan (`js/theme.js`): 3 preset, pemilih warna, peringatan kontras, reset.
 - **Kredit**: Created by Syahla · Visualized by Valmortheos.
+- **Preset warna** (maks 3): Pink Blush (default), Lavender, Peach Sunset.
+- **Line chart**: panel global (keseluruhan / per tanggal) dan di tiap responden (kamu vs kelompok), `lineChart()` di `js/charts.js`.
+- **Mobile**: lembar "Lihat analitik" di bawah menggantikan tombol melayang.

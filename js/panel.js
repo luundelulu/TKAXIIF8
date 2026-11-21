@@ -1,5 +1,5 @@
 /* Konten panel analitik (konteks global / terpilih) dan isi node yang mengembang. */
-import { esc, pct, hbars, histogram, donut, bubbleScatter, answerStrip } from './charts.js';
+import { esc, pct, hbars, histogram, donut, bubbleScatter, answerStrip, lineChart } from './charts.js';
 import { ASPEK_COLOR, BANDS, KOHORT_COLORS, STATUS, bandOf, pearson, initials } from './stats.js';
 
 const fmtDate = ts => new Date(ts).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
@@ -26,6 +26,19 @@ function questionRows(ctx, qIdx, perQ, n) {
 }
 const aspekLegend = ctx => `<div class="lg">${ctx.aspek.map((a, i) => `<span><i style="background:${ASPEK_COLOR[i]}"></i>${a}</span>`).join('')}</div>`;
 
+/* Line chart Ya% per pernyataan: keseluruhan atau per tanggal pengisian */
+function qLine(S) {
+  const { ctx, agg, idx } = S, mode = S.lineMode || 'all', labels = [...Array(20).keys()].map(q => String(q + 1));
+  const sel = `<div class="sel2">Tampilkan <select data-line="1" aria-label="Mode grafik garis"><option value="all" ${mode === 'all' ? 'selected' : ''}>Keseluruhan</option><option value="date" ${mode === 'date' ? 'selected' : ''}>Per tanggal pengisian</option></select></div>`;
+  if (mode === 'date') {
+    const series = ctx.kohorts.map(k => { const m = idx.filter(i => ctx.respondents[i].kohort === k); return { name: `${kohortLabel(ctx, k)} (n=${m.length})`, color: kohortColor(ctx, k), values: [...Array(20).keys()].map(q => m.length ? m.filter(i => ctx.ans(i, q)).length / m.length : null), tips: [...Array(20).keys()].map(q => `${kohortLabel(ctx, k)} · Q${q + 1}: ${m.filter(i => ctx.ans(i, q)).length} dari ${m.length} Ya`) }; }).filter(s => s.values.some(v => v != null));
+    return sel + `<div class="lg">${series.map(s => `<span><i style="background:${s.color}"></i>${s.name}</span>`).join('')}</div>` + lineChart(labels, series, { xTitle: 'Nomor pernyataan' });
+  }
+  const vals = [...Array(20).keys()].map(q => agg.n ? agg.perQ[q] / agg.n : null);
+  const s = [{ name: 'Semua responden', color: ASPEK_COLOR[0], area: true, values: vals, markerColors: [...Array(20).keys()].map(q => ASPEK_COLOR[ctx.questions[q].aspek]), tips: vals.map((v, q) => `Q${q + 1} · ${ctx.questions[q].text} — ${pct(v, 1)} Ya`) }];
+  return sel + aspekLegend(ctx) + lineChart(labels, s, { xTitle: 'Nomor pernyataan' });
+}
+
 /* ------------------------ panel global ------------------------ */
 export function globalPanel(S) {
   const { ctx, agg, graph: g, filtersOn, scatter } = S, m = g.metrics;
@@ -35,6 +48,7 @@ export function globalPanel(S) {
   h += sec('Struktur relasi pada graf ini', `<dl class="dl"><div><dt>Node</dt><dd>${m.nodes}</dd></div><div><dt>Relasi</dt><dd>${m.edges}</dd></div><div><dt>Kepadatan</dt><dd>${m.density == null ? '–' : pct(m.density, 1)}</dd></div><div><dt>Komponen terhubung</dt><dd>${m.components}</dd></div><div><dt>Responden terisolasi</dt><dd>${m.isolated}</dd></div><div><dt>Derajat rata-rata / maks</dt><dd>${num(m.meanDeg)} / ${m.maxDeg}</dd></div></dl>`,
     S.mode === 'celah' ? 'Terisolasi = responden tanpa jawaban Tidak pada pertanyaan yang tampil.' : S.mode === 'mirip' ? 'Komponen dihitung antar responden; ≥2 node saja yang dihitung sebagai komponen.' : 'Graf dua pihak (responden–aspek): derajat responden = jumlah aspek yang tampil.');
   h += sec('Aspek mana yang paling kuat?', hbars(aspekRows(ctx, agg.perAspek.map(a => a.pct)), { labelW: 100 }), `Persentase Ya dari seluruh jawaban pada aspek tersebut (${agg.n} responden).`);
+  h += sec('Grafik garis: persentase Ya per pernyataan', qLine(S), 'Arahkan kursor/ketuk titik untuk teks pernyataan. Garis turun = pernyataan lebih sering dijawab Tidak. Pada mode per tanggal, n kecil membuat garis naik-turun tajam.');
   const order = [...Array(20).keys()].sort((a, b) => agg.perQ[a] - agg.perQ[b] || a - b);
   h += sec('Pernyataan mana yang paling sering dijawab Tidak?', aspekLegend(ctx) + hbars(questionRows(ctx, order, agg.perQ, agg.n), { labelW: 28, rowH: 19, barH: 8 }), 'Diurutkan dari persentase Ya terendah. Arahkan kursor ke batang untuk teks pernyataan.');
   const marks = agg.n ? ctx.respondents.find(r => false) : null;
@@ -61,6 +75,11 @@ export function respondentPanel(S, n, compact = false) {
   h += mk([[R.ya, 'Ya', STATUS.yes], [20 - R.ya, 'Tidak', STATUS.no], [`#${rank}`, `dari ${agg.n}`]]);
   h += `<p class="meta">${esc(R.email)}<br>Mengisi ${fmtTime(R.ts)} · <span class="dotk" style="--c:${kohortColor(ctx, R.kohort)}"></span>kelompok tanggal ${kohortLabel(ctx, R.kohort)}</p>`;
   h += sec('Skor per aspek', hbars(aspekRows(ctx, R.aspekYa.map((y, a) => y / ctx.aspekQ[a].length), mean), { labelW: 100 }), `Garis tegak = rata-rata responden yang tampil (n=${agg.n}). Nilai = ${R.aspekYa.map((y, a) => `${y}/${ctx.aspekQ[a].length}`).join(', ')}.`);
+  const grp = [...Array(20).keys()].map(q => agg.n ? agg.perQ[q] / agg.n : null);
+  h += sec('Grafik garis: kamu vs kelompok', `<div class="lg"><span><i style="background:${ASPEK_COLOR[0]}"></i>Kelompok (rata-rata Ya)</span><span><i style="background:${ASPEK_COLOR[1]}"></i>${esc(R.nama.split(' ')[0])}</span></div>` + lineChart([...Array(20).keys()].map(q => String(q + 1)), [
+    { name: 'Kelompok', color: ASPEK_COLOR[0], area: true, values: grp, tips: grp.map((v, q) => `Kelompok · Q${q + 1}: ${pct(v, 0)} Ya`) },
+    { name: R.nama, color: ASPEK_COLOR[1], dash: true, values: ans.map(v => v ? 1 : 0), tips: ans.map((v, q) => `${R.nama} · Q${q + 1}: ${v ? 'Ya' : 'Tidak'}`) }
+  ], { h: 170, xTitle: 'Nomor pernyataan' }), 'Garis putus-putus: 100% = Ya, 0% = Tidak.');
   h += sec('Jawaban per pernyataan', answerStrip(ans, ctx.questions, ASPEK_COLOR), '✓ hijau = Ya, ✕ merah = Tidak. Garis kecil di bawah = warna aspek.');
   h += sec(`Dijawab Tidak (${tidak.length})`, tidak.length ? `<ul class="qlist">${tidak.map(q => `<li><b style="color:${ASPEK_COLOR[ctx.questions[q].aspek]}">Q${q + 1}</b> ${esc(ctx.questions[q].text)}</li>`).join('')}</ul>` : '<p class="note">Tidak ada. Semua pernyataan dijawab Ya.</p>');
   h += sec('Posisi dalam kelompok', `<p class="plain">Peringkat ${rank} dari ${agg.n} berdasarkan jumlah Ya${ties > 1 ? ` (seri dengan ${ties - 1} responden lain)` : ''}.</p>` + (compact ? '' : histogram(agg.hist, v => bandOf(v).color, R.ya)));

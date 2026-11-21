@@ -6,7 +6,7 @@ import { esc, pct } from './charts.js';
 import { initTheme, themeSection, themeEvent } from './theme.js';
 
 const $ = (s, r = document) => r.querySelector(s);
-const S = { mode: 'aspek', colorMode: 'band', sizeMode: 'deg', scatter: { x: 0, y: 1 }, tab: 'graph', sort: { key: 'ya', dir: -1 }, dataQ: '' };
+const S = { lineMode: 'all', mode: 'aspek', colorMode: 'band', sizeMode: 'deg', scatter: { x: 0, y: 1 }, tab: 'graph', sort: { key: 'ya', dir: -1 }, dataQ: '' };
 let G, panelKey = '';
 initTheme(rebuild => { if (!G) return; if (rebuild) buildPopovers(); G.refreshLabels(); refresh(); keepOpen(); });
 const keepOpen = () => { if (S.popOpen) { const p = $(S.popOpen); if (p) p.hidden = false; } };
@@ -176,7 +176,7 @@ function bindUI() {
     if (e.target.closest('[data-clear]')) { G.collapseAll(); return true; }
   };
   $('#stage').addEventListener('click', nav); $('#panel').addEventListener('click', nav);
-  $('#panel').addEventListener('change', e => { const k = e.target.dataset.scatter; if (k) { S.scatter[k] = +e.target.value; renderPanel(); } });
+  $('#panel').addEventListener('change', e => { const k = e.target.dataset.scatter; if (k) { S.scatter[k] = +e.target.value; renderPanel(); } if (e.target.dataset.line) { S.lineMode = e.target.value; renderPanel(); } });
   $('#v-resp').addEventListener('click', e => {
     const b = e.target.closest('[data-sort]');
     if (b) { const k = b.dataset.sort; S.sort = { key: k, dir: S.sort.key === k ? -S.sort.dir : (k === 'nama' || k === 'kohort' ? 1 : -1) }; renderTab(); return; }

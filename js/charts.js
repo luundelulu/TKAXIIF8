@@ -86,3 +86,31 @@ export function answerStrip(ans, qs, colors) {
     <text x="${x + cw / 2}" y="40" text-anchor="middle" class="t-ax">${i + 1}</text></g>`; }).join('');
   return svg(46, body, 'Jawaban per pertanyaan: ✓ Ya, ✕ Tidak. Garis kecil di bawah = warna aspek');
 }
+
+
+/* Line chart 2D ala Excel: banyak seri, grid, sumbu, marker, tooltip via data-tip.
+   labels: string[]; series: {name,color,values(0..1|null),tips?:string[],markerColors?:string[],area?:bool,dash?:bool}[] */
+let lcId = 0;
+export function lineChart(labels, series, { h = 190, yFmt = v => Math.round(v * 100) + '%', xTitle = '' } = {}) {
+  const id = 'lc' + (++lcId), L = 36, R = 10, T = 12, B = xTitle ? 34 : 22, pw = W - L - R, ph = h - T - B, n = labels.length;
+  const x = i => L + (n === 1 ? pw / 2 : i * pw / (n - 1)), y = v => T + ph * (1 - v);
+  let g = '';
+  for (const t of [0, .25, .5, .75, 1]) g += `<line x1="${L}" x2="${W - R}" y1="${y(t)}" y2="${y(t)}" class="lc-grid${t === 0 ? ' lc-base' : ''}"/><text x="${L - 6}" y="${y(t) + 3.5}" text-anchor="end" class="t-ax">${yFmt(t)}</text>`;
+  const step = n > 12 ? 2 : 1;
+  labels.forEach((lb, i) => { if (i % step === 0 || i === n - 1) g += `<text x="${x(i)}" y="${T + ph + 14}" text-anchor="middle" class="t-ax">${esc(lb)}</text>`; });
+  if (xTitle) g += `<text x="${L + pw / 2}" y="${h - 4}" text-anchor="middle" class="t-ax">${esc(xTitle)}</text>`;
+  let defs = '', body = '';
+  series.forEach((s, k) => {
+    const pts = s.values.map((v, i) => v == null ? null : [x(i), y(v)]).filter(Boolean);
+    if (!pts.length) return;
+    const d = pts.map((p, i) => (i ? 'L' : 'M') + p[0].toFixed(1) + ' ' + p[1].toFixed(1)).join('');
+    if (s.area) { defs += `<linearGradient id="${id}g${k}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${s.color}" stop-opacity=".28"/><stop offset="1" stop-color="${s.color}" stop-opacity="0"/></linearGradient>`; body += `<path d="${d}L${pts[pts.length - 1][0].toFixed(1)} ${y(0)}L${pts[0][0].toFixed(1)} ${y(0)}Z" fill="url(#${id}g${k})"/>`; }
+    body += `<path d="${d}" fill="none" stroke="${s.color}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" ${s.dash ? 'stroke-dasharray="5 4"' : ''}/>`;
+  });
+  series.forEach((s, k) => s.values.forEach((v, i) => {
+    if (v == null) return;
+    const c = (s.markerColors && s.markerColors[i]) || s.color, tip = (s.tips && s.tips[i]) || `${s.name} · ${labels[i]}: ${yFmt(v)}`;
+    body += `<g class="hit lc-pt" data-tip="${esc(tip)}"><circle cx="${x(i)}" cy="${y(v)}" r="9" fill="transparent"/><circle cx="${x(i)}" cy="${y(v)}" r="3.4" fill="#fff" stroke="${c}" stroke-width="2"/></g>`;
+  }));
+  return `<svg viewBox="0 0 ${W} ${h}" role="img" aria-label="${esc('Grafik garis: ' + series.map(s => s.name).join(', '))}" class="chart lc"><defs>${defs}</defs>${g}${body}</svg>`;
+}
