@@ -31,7 +31,7 @@ function bootFail(m) { $('#bootMsg').textContent = 'Gagal memuat data: ' + m + '
 /* ---------------- init ---------------- */
 function init() {
   const { ctx } = S;
-  $('#sub').textContent = `${ctx.kelas ? 'Kelas ' + ctx.kelas + ' · ' : ''}${ctx.N} responden · ${ctx.N * 20} jawaban`;
+  $('#sub').innerHTML = `${ctx.kelas ? `<span class="kelas">Kelas ${esc(ctx.kelas)}</span>` : ''}<span class="cnt2">${ctx.N} responden · ${ctx.N * 20} jawaban</span>`;
   G = new Graph($('#stage'), ctx, {
     mode: () => S.mode,
     colorOf: n => S.colorMode === 'band' ? bandOf(ctx.respondents[n.ref].ya).color : kohortColor(ctx, ctx.respondents[n.ref].kohort),

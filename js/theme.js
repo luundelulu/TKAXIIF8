@@ -3,19 +3,19 @@
 import { ASPEK_COLOR, BANDS, KOHORT_COLORS, STATUS, contrast, inkOn } from './stats.js';
 
 export const PRESETS = {
-  pink: { name: 'Pink Blush', band: ['#D6336C', '#8E5BD4', '#F4A261'], aspek: ['#9B6BDF', '#E5528A', '#F28C38'], yes: '#8E5BD4', no: '#F2784B', kohort: ['#8E5BD4', '#E5528A', '#F28C38', '#8A8FA8', '#2F9E8F', '#C77DBA'] },
   lavender: { name: 'Lavender', band: ['#7C4DCC', '#B794F6', '#F6A5C0'], aspek: ['#7C4DCC', '#D6609B', '#F0974A'], yes: '#7C4DCC', no: '#E8738F', kohort: ['#7C4DCC', '#D6609B', '#F0974A', '#9AA0B8', '#3BA99C', '#B07AC9'] },
+  pink: { name: 'Pink Blush', band: ['#D6336C', '#8E5BD4', '#F4A261'], aspek: ['#9B6BDF', '#E5528A', '#F28C38'], yes: '#8E5BD4', no: '#F2784B', kohort: ['#8E5BD4', '#E5528A', '#F28C38', '#8A8FA8', '#2F9E8F', '#C77DBA'] },
   peach: { name: 'Peach Sunset', band: ['#E4572E', '#F29E4C', '#C77DBA'], aspek: ['#E4572E', '#C77DBA', '#8E6BBF'], yes: '#D6478B', no: '#F08A24', kohort: ['#E4572E', '#C77DBA', '#8E6BBF', '#9AA0B8', '#2F9E8F', '#D6478B'] }
 };
-const KEY = 'tka-theme-v2';
-let cur = structuredClone(PRESETS.pink); cur.preset = 'pink';
+const KEY = 'tka-theme-v3';
+let cur = structuredClone(PRESETS.lavender); cur.preset = 'lavender';
 let onChange = () => {};
 
 function apply(t) {
   cur = structuredClone(t);
   t.band.forEach((c, i) => BANDS[i].color = c);
   t.aspek.forEach((c, i) => ASPEK_COLOR[i] = c);
-  (t.kohort || PRESETS.pink.kohort).forEach((c, i) => KOHORT_COLORS[i] = c);
+  (t.kohort || PRESETS.lavender.kohort).forEach((c, i) => KOHORT_COLORS[i] = c);
   STATUS.yes = t.yes; STATUS.no = t.no;
   const r = document.documentElement.style;
   r.setProperty('--yes', t.yes); r.setProperty('--no', t.no);
@@ -23,8 +23,8 @@ function apply(t) {
 }
 export function initTheme(cb) {
   onChange = cb;
-  try { const s = JSON.parse(localStorage.getItem(KEY) || 'null'); if (s && s.band?.length === 3 && s.aspek?.length === 3) { apply({ ...PRESETS.pink, ...s }); return; } } catch { /* abaikan */ }
-  apply(PRESETS.pink);
+  try { const s = JSON.parse(localStorage.getItem(KEY) || 'null'); if (s && s.band?.length === 3 && s.aspek?.length === 3) { apply({ ...PRESETS.lavender, ...s }); return; } } catch { /* abaikan */ }
+  apply({ ...PRESETS.lavender, preset: 'lavender' });
 }
 
 const FIELDS = [
@@ -50,7 +50,7 @@ export function themeEvent(e) {
   if (e.type === 'click') {
     const p = t.closest('[data-preset]');
     if (p) { apply({ ...PRESETS[p.dataset.preset], preset: p.dataset.preset }); onChange(true); return true; }
-    if (t.dataset.act === 'theme-reset') { apply({ ...PRESETS.pink, preset: 'pink' }); onChange(true); return true; }
+    if (t.dataset.act === 'theme-reset') { apply({ ...PRESETS.lavender, preset: 'lavender' }); onChange(true); return true; }
   }
   if (e.type === 'input' && t.dataset.color) {
     const n = structuredClone(cur), k = t.dataset.color, i = t.dataset.i;
