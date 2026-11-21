@@ -4,11 +4,13 @@ import { panelFor, panelHead, nodeBody, kohortLabel, kohortColor } from './panel
 import { respondentsView, relationsView, dataView } from './views.js';
 import { esc, pct } from './charts.js';
 import { initTheme, themeSection, themeEvent } from './theme.js';
+import { initHaptics, haptic, hapticOn, setHaptic } from './haptic.js';
 
 const $ = (s, r = document) => r.querySelector(s);
 const S = { lineMode: 'all', mode: 'aspek', colorMode: 'band', sizeMode: 'deg', scatter: { x: 0, y: 1 }, tab: 'graph', sort: { key: 'ya', dir: -1 }, dataQ: '' };
 let G, panelKey = '';
-initTheme(rebuild => { if (!G) return; if (rebuild) buildPopovers(); G.refreshLabels(); refresh(); keepOpen(); });
+initHaptics();
+initTheme(rebuild => { if (!G) return; if (rebuild) { const o = $('#popTheme'), keep = o.scrollTop; buildPopovers(); o.scrollTop = keep; } G.refreshLabels(); refresh(); keepOpen(); });
 const keepOpen = () => { if (S.popOpen) { const p = $(S.popOpen); if (p) p.hidden = false; } };
 
 /* ---------------- boot ---------------- */
@@ -37,7 +39,7 @@ function init() {
       ? { t: esc(ctx.aspek[n.ref]), s: pct(S.agg.perAspek[n.ref].pct, 0) + ' Ya', p: S.agg.perAspek[n.ref].pct, color: ASPEK_COLOR[n.ref], aria: ctx.aspek[n.ref] }
       : { t: 'Q' + (n.ref + 1), s: pct(S.agg.n ? S.agg.perQ[n.ref] / S.agg.n : null, 0) + ' Ya', p: S.agg.n ? S.agg.perQ[n.ref] / S.agg.n : null, color: ASPEK_COLOR[ctx.questions[n.ref].aspek], aria: `Pernyataan ${n.ref + 1}: ${ctx.questions[n.ref].text}` },
     body: n => nodeBody(S, n),
-    onSelect: () => { renderPanel(); },
+    onSelect: () => { haptic(14); renderPanel(); },
     onFocus: id => { S.focused = id; renderState(); },
     onPins: c => { $('#zPin').hidden = !c; }
   });
@@ -127,7 +129,8 @@ function buildPopovers() {
   <fieldset><legend>Ukuran node responden</legend>${[['deg', 'Jumlah relasi'], ['skor', 'Jumlah Ya'], ['flat', 'Seragam']].map(([v, l]) => `<label class="ck"><input type="radio" name="sz" data-s="size" value="${v}" ${S.sizeMode === v ? 'checked' : ''}><span>${l}</span></label>`).join('')}</fieldset>
   <fieldset><legend>Gerak</legend><label class="ck"><input type="checkbox" data-s="reduce" ${G.reduced ? 'checked' : ''}><span>Kurangi animasi</span></label></fieldset>
   <button class="btn wide" data-act="unpin">Lepas semua pin posisi</button>
-  ${themeSection()}`;
+  <fieldset><legend>Getaran</legend><label class="ck"><input type="checkbox" data-s="haptic" ${hapticOn() ? 'checked' : ''}><span>Getar halus saat menekan tombol <small>(HP Android)</small></span></label></fieldset>`;
+  $('#popTheme').innerHTML = `<div class="ph2"><strong>Tema warna</strong></div>${themeSection()}`;
 }
 
 /* Perbarui status tombol aspek tanpa membangun ulang popover (fokus keyboard tetap) */
@@ -139,7 +142,7 @@ function syncAsp() {
 }
 function bindUI() {
   /* popover */
-  const pops = [['#bFilter', '#popFilter'], ['#bSet', '#popSet']];
+  const pops = [['#bTheme', '#popTheme'], ['#bFilter', '#popFilter'], ['#bSet', '#popSet']];
   const closePops = () => { S.popOpen = null; pops.forEach(([b, p]) => { $(p).hidden = true; $(b).setAttribute('aria-expanded', 'false'); }); };
   pops.forEach(([b, p]) => $(b).addEventListener('click', e => { e.stopPropagation(); const open = $(p).hidden; closePops(); S.popOpen = open ? p : null; $(p).hidden = !open; $(b).setAttribute('aria-expanded', String(open)); }));
   document.addEventListener('click', e => { if (e.target.isConnected && !e.target.closest('.pop') && !e.target.closest('.acts')) closePops(); if (!e.target.closest('.search')) closeRes(); });
@@ -161,10 +164,12 @@ function bindUI() {
     if (s === 'multi') { G.multi = t.value === '1'; if (!G.multi) { const keep = G.selectedId; for (const id of [...G.expanded]) if (id !== keep) G.collapse(G.pool.get(id), true); G.afterChange(); } }
     if (s === 'color') { S.colorMode = t.value; G.colorMode = t.value; for (const n of G.vis) G.paintStatic(n); renderLegend(); G.kick(); }
     if (s === 'size') { S.sizeMode = t.value; G.sizeMode = t.value; G.setData(S.graph); renderLegend(); }
+    if (s === 'haptic') setHaptic(t.checked);
     if (s === 'reduce') { G.reduced = t.checked; document.body.classList.toggle('reduced', t.checked); }
   });
-  $('#popSet').addEventListener('click', e => { if (themeEvent(e)) return; if (e.target.dataset.act === 'unpin') { G.unpinAll(); } });
-  $('#popSet').addEventListener('input', e => { themeEvent(e); });
+  $('#popSet').addEventListener('click', e => { if (e.target.dataset.act === 'unpin') { G.unpinAll(); } });
+  $('#popTheme').addEventListener('click', e => { themeEvent(e); });
+  $('#popTheme').addEventListener('input', e => { themeEvent(e); });
 
   /* zoom */
   $('#zIn').onclick = () => G.zoomBy(1.25); $('#zOut').onclick = () => G.zoomBy(0.8); $('#zFit').onclick = () => G.reset(); $('#zPin').onclick = () => G.unpinAll();
@@ -218,7 +223,7 @@ function bindUI() {
   /* keyboard global */
   document.addEventListener('keydown', e => {
     if (e.key === 'Escape') {
-      if (!$('#popFilter').hidden || !$('#popSet').hidden) { closePops(); return; }
+      if (!$('#popFilter').hidden || !$('#popSet').hidden || !$('#popTheme').hidden) { closePops(); return; }
       if (S.tab !== 'graph') return;
       if (G.collapseSelected()) return; if (G.focusId) G.clearFocus(); return;
     }

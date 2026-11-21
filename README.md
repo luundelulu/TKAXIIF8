@@ -71,3 +71,5 @@ klik ganda: fokus tetangga · seret node: pindah dan dikunci (Lepas pin di Penga
 - **Preset warna** (maks 3): Pink Blush (default), Lavender, Peach Sunset.
 - **Line chart**: panel global (keseluruhan / per tanggal) dan di tiap responden (kamu vs kelompok), `lineChart()` di `js/charts.js`.
 - **Mobile**: lembar "Lihat analitik" di bawah menggantikan tombol melayang.
+- **Tema** kini tombol sendiri (Tema · Filter · Pengaturan). Getaran (Vibration API) di semua tombol; bisa dimatikan di Pengaturan. iOS Safari tidak mendukung API ini.
+- Kredit berupa strip tipis di atas navbar bawah (tidak menimpa konten); mengambang hanya di graf versi desktop.
