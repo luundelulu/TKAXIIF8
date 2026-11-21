@@ -1,0 +1,24 @@
+tipe,kunci,aspek,label,n,ya,tidak,persen_ya
+aspek,Pemahaman dasar,Pemahaman dasar,Pemahaman dasar,350,309,41,88.29
+aspek,Persiapan,Persiapan,Persiapan,175,151,24,86.29
+aspek,Kesiapan,Kesiapan,Kesiapan,175,149,26,85.14
+pertanyaan,Q1,Pemahaman dasar,Saya mengetahui tujuan serta pengertian dari TKA.,35,35,0,100.0
+pertanyaan,Q2,Pemahaman dasar,Saya mengetahui mata pelajaran apa saja yang akan diujikan dalam TKA.,35,34,1,97.14
+pertanyaan,Q3,Pemahaman dasar,Saya mengetahui terkait sistematika TKA nantinya.,35,31,4,88.57
+pertanyaan,Q4,Pemahaman dasar,Saya mengetahui muatan apa saja yang ada dalam TKA Matematika.,35,27,8,77.14
+pertanyaan,Q5,Pemahaman dasar,Saya mengetahui muatan apa saja yang ada dalam TKA Bahasa Indonesia.,35,30,5,85.71
+pertanyaan,Q6,Pemahaman dasar,Saya mengetahui muatan apa saja yang ada dalam TKA Bahasa Inggris.,35,27,8,77.14
+pertanyaan,Q7,Pemahaman dasar,Saya sudah mengetahui mata pelajaran pilihan yang akan saya ambil.,35,34,1,97.14
+pertanyaan,Q8,Pemahaman dasar,Saya sudah yakin dengan mata pelajaran pilihan saya yang akan diambil nantinya pada saat TKA.,35,34,1,97.14
+pertanyaan,Q9,Pemahaman dasar,Saya mengetahui durasi waktu serta jumlah soal yang ada nantinya pada saat TKA.,35,32,3,91.43
+pertanyaan,Q10,Pemahaman dasar,Saya sudah mengetahui sistem penilaian yang digunakan untuk menghitung skor akhir TKA.,35,25,10,71.43
+pertanyaan,Q11,Persiapan,Saya sudah mulai mencoba untuk mengerjakan latihan soal/Try Out TKA.,35,34,1,97.14
+pertanyaan,Q12,Persiapan,Saya sudah menyusun jadwal belajar mandiri yang efektif tanpa mengganggu tugas harian sekolah.,35,27,8,77.14
+pertanyaan,Q13,Persiapan,Saya sudah menetapkan target skor TKA yang realistis sesuai dengan jurusan impian.,35,29,6,82.86
+pertanyaan,Q14,Persiapan,Saya sudah tahu kapan waktu yang tepat untuk melakukan simulasi Try Out mandiri.,35,30,5,85.71
+pertanyaan,Q15,Persiapan,Saya sudah tahu cara mengidentifikasi materi pelajaran yang belum saya kuasai.,35,31,4,88.57
+pertanyaan,Q16,Kesiapan,Saya sudah mengomunikasikan target jurusan dan persiapan TKA dengan orang tua saya.,35,33,2,94.29
+pertanyaan,Q17,Kesiapan,Saya merasa dukungan dari keluarga sekitar sudah cukup membantu menenangkan mental saya.,35,31,4,88.57
+pertanyaan,Q18,Kesiapan,Saya sudah membiasakan diri dengan pola tidur dan pola makan yang teratur agar kondisi tubuh tetap fit saat menjelang TKA.,35,32,3,91.43
+pertanyaan,Q19,Kesiapan,Saya sudah pernah berkonsultasi dengan Bimbingan Konseling (BK) terkait pilihan jurusan serta universitas yang saya impikan.,35,24,11,68.57
+pertanyaan,Q20,Kesiapan,Saya tidak merasa tertekan dengan pilihan universitas serta jurusan yang saya pilih.,35,29,6,82.86

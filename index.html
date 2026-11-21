@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Peta Kesiapan TKA</title>
+<meta name="description" content="Graf interaktif hasil survei kesiapan TKA. Seluruh data diproses di browser.">
+<meta name="color-scheme" content="light">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='10' cy='11' r='6' fill='%238B5CF6'/%3E%3Ccircle cx='23' cy='10' r='4' fill='%23EC4899'/%3E%3Ccircle cx='17' cy='23' r='5' fill='%23FB923C'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<a class="skip" href="#stage">Langsung ke graf</a>
+<header class="top">
+  <div class="brand">
+    <svg viewBox="0 0 32 32" width="26" height="26" aria-hidden="true"><defs><linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#8B5CF6"/><stop offset="1" stop-color="#EC4899"/></linearGradient></defs><path d="M10 11 23 10M10 11l7 12M23 10l-6 13" stroke="#CFC8E4" stroke-width="1.6" fill="none"/><circle cx="10" cy="11" r="6" fill="url(#bg)"/><circle cx="23" cy="10" r="4" fill="#EC4899"/><circle cx="17" cy="23" r="5" fill="#FB923C"/></svg>
+    <div><strong>Peta Kesiapan TKA</strong><small id="sub">Memuat…</small></div>
+  </div>
+  <div class="search">
+    <svg viewBox="0 0 20 20" width="16" height="16" aria-hidden="true"><circle cx="9" cy="9" r="5.5" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="m13.5 13.5 4 4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+    <input id="q" type="search" placeholder="Cari responden" autocomplete="off" role="combobox" aria-expanded="false" aria-controls="qres" aria-label="Cari responden">
+    <ul id="qres" role="listbox" hidden></ul>
+  </div>
+  <div class="seg" role="radiogroup" aria-label="Jenis relasi pada graf" id="modeSeg"></div>
+  <div class="acts">
+    <button class="btn" id="bFilter" aria-haspopup="dialog" aria-expanded="false">Filter<span class="cnt" id="fCnt" hidden></span></button>
+    <button class="btn" id="bSet" aria-haspopup="dialog" aria-expanded="false">Pengaturan</button>
+  </div>
+  <div class="pop" id="popFilter" role="dialog" aria-label="Filter" hidden></div>
+  <div class="pop" id="popSet" role="dialog" aria-label="Pengaturan" hidden></div>
+</header>
+
+<main id="main">
+  <section class="view v-graph" id="v-graph" aria-label="Graf dan analitik">
+    <div class="gw">
+      <div class="stage" id="stage" tabindex="-1"></div>
+      <div class="ctl" role="group" aria-label="Kontrol tampilan">
+        <button id="zIn" aria-label="Perbesar" title="Perbesar (+)">+</button>
+        <button id="zOut" aria-label="Perkecil" title="Perkecil (−)">−</button>
+        <button id="zFit" aria-label="Reset tampilan" title="Reset tampilan (0)"><svg viewBox="0 0 20 20" width="16" height="16"><path d="M3 7V3h4M13 3h4v4M17 13v4h-4M7 17H3v-4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+        <button id="zPin" aria-label="Lepas semua pin" title="Lepas posisi yang dikunci" hidden><svg viewBox="0 0 20 20" width="16" height="16"><path d="M7 3h6l-1 5 3 3H5l3-3zM10 11v6" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/></svg></button>
+      </div>
+      <div class="legend" id="legend"></div>
+      <div class="gstate" id="gstate" role="status" aria-live="polite"></div>
+      <button class="fab" id="drawerBtn" aria-expanded="false" aria-controls="panel">Analitik</button>
+    </div>
+    <aside class="side" id="panel" aria-label="Panel analitik" tabindex="-1"></aside>
+  </section>
+  <section class="view v-doc" id="v-resp" hidden></section>
+  <section class="view v-doc" id="v-rel" hidden></section>
+  <section class="view v-doc" id="v-data" hidden></section>
+</main>
+
+<nav class="tabs" role="tablist" aria-label="Tampilan">
+  <button role="tab" aria-selected="true" data-tab="graph">Ikhtisar</button>
+  <button role="tab" aria-selected="false" data-tab="resp">Responden</button>
+  <button role="tab" aria-selected="false" data-tab="rel">Relasi</button>
+  <button role="tab" aria-selected="false" data-tab="data">Data</button>
+</nav>
+<div class="tip" id="tip" role="tooltip" hidden></div>
+<div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+<div class="boot" id="boot"><div><span class="spin" aria-hidden="true"></span><p id="bootMsg">Memuat dan memverifikasi data…</p></div></div>
+<noscript><p style="padding:24px">Halaman ini membutuhkan JavaScript.</p></noscript>
+<script type="module" src="js/main.js"></script>
+</body>
+</html>
