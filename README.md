@@ -60,3 +60,11 @@ klik ganda: fokus tetangga · seret node: pindah dan dikunci (Lepas pin di Penga
     js/charts.js    chart SVG
     js/views.js     tab Responden / Relasi / Data
     data/  tools/  .github/workflows/pages.yml
+
+## Pembaruan tampilan
+- **Inisial**: semua kata nama (`initials()` di `js/stats.js`, maks 4 huruf). Santi Turyana Ali → STA.
+- **Kontras**: node responden solid, teks otomatis putih/gelap; Ya = hijau ✓, Tidak = merah ✕ (bukan hanya warna).
+- **Mini-chart**: cincin Ya/20 di node responden, bar mini di node aspek/pertanyaan, kartu metrik di isi node.
+- **Filter**: tombol aspek (Pemahaman dasar / Persiapan / Kesiapan) aktif = solid + ✓, nonaktif = putus-putus.
+- **Kustomisasi warna**: Pengaturan → Warna & tampilan (`js/theme.js`): 3 preset, pemilih warna, peringatan kontras, reset.
+- **Kredit**: Created by Syahla · Visualized by Valmortheos.

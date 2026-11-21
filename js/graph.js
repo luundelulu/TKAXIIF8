@@ -1,6 +1,7 @@
 /* Renderer graf: node DOM yang bermorfing + edge SVG, di dalam satu "world" yang di-zoom/pan.
    Jumlah node ≤ ~60, sehingga DOM+SVG dipilih (teks tajam, elemen interaktif asli). Lihat README untuk alasan. */
 import { Simulation } from './physics.js';
+import { initials, inkOn } from './stats.js';
 
 export const NODE_MOTION = { duration: 320, easing: [0.34, 1.56, 0.64, 1], idleSize: 56, expandedWidth: 320, expandedRadius: 18 };
 const SIZE = {
@@ -22,7 +23,6 @@ function bezier(x1, y1, x2, y2) {
 const ease = bezier(...NODE_MOTION.easing);
 const SVGNS = 'http://www.w3.org/2000/svg';
 const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
-const initials = n => n.split(/\s+/).filter(Boolean).slice(0, 2).map(w => w[0]).join('').toUpperCase();
 function mulberry(a) { return () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
 
 export class Graph {
@@ -104,11 +104,14 @@ export class Graph {
     const c = this.ctx, st = n.el.style;
     if (n.type === 'r') {
       const r = c.respondents[n.ref];
-      st.setProperty('--c', this.hooks.colorOf(n)); n.face.innerHTML = `<span class="ini">${initials(r.nama)}</span>${n.deg ? `<span class="badge">${n.deg}</span>` : ''}`;
+      const col = this.hooks.colorOf(n), ini = initials(r.nama), arc = (r.ya / 20 * 103.67).toFixed(2);
+      st.setProperty('--c', col); st.setProperty('--tc', inkOn(col));
+      n.face.innerHTML = `<svg class="ring" viewBox="0 0 36 36" aria-hidden="true"><circle cx="18" cy="18" r="16.5" fill="none" stroke="currentColor" stroke-opacity=".3" stroke-width="2.4"/><circle cx="18" cy="18" r="16.5" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-dasharray="${arc} 103.67" transform="rotate(-90 18 18)"/></svg><span class="ini i${ini.length}">${ini}</span>${n.deg ? `<span class="badge">${n.deg}</span>` : ''}`;
+      n.el.setAttribute('title', r.nama);
       n.el.setAttribute('aria-label', `${r.nama}, ${r.ya} dari 20 Ya, ${n.deg} relasi`);
     } else {
       const l = this.hooks.label(n); st.setProperty('--c', l.color);
-      n.face.innerHTML = `<span class="l1">${l.t}</span><span class="l2">${l.s}</span>`;
+      n.face.innerHTML = `<span class="l1">${l.t}</span><span class="l2">${l.s}</span>${l.p == null ? '' : `<span class="mbar" aria-hidden="true"><i style="width:${Math.round(l.p * 100)}%"></i></span>`}`;
       n.el.setAttribute('aria-label', `${l.aria}, ${n.deg} relasi`);
     }
   }

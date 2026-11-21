@@ -1,11 +1,12 @@
 /* Konten panel analitik (konteks global / terpilih) dan isi node yang mengembang. */
 import { esc, pct, hbars, histogram, donut, bubbleScatter, answerStrip } from './charts.js';
-import { ASPEK_COLOR, BANDS, KOHORT_COLORS, bandOf, pearson } from './stats.js';
+import { ASPEK_COLOR, BANDS, KOHORT_COLORS, STATUS, bandOf, pearson, initials } from './stats.js';
 
 const fmtDate = ts => new Date(ts).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
 const fmtTime = ts => new Date(ts).toLocaleString('id-ID', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 const num = (x, d = 1) => x == null ? '–' : x.toFixed(d).replace('.', ',');
 const sec = (title, body, note = '') => `<section class="blk"><h3>${title}</h3>${body}${note ? `<p class="note">${note}</p>` : ''}</section>`;
+const mk = items => `<div class="mk">${items.map(([v, l, c]) => `<div style="--k:${c || 'var(--ink)'}"><b>${v}</b><span>${l}</span></div>`).join('')}</div>`;
 const goto = (id, text, sub = '') => `<button type="button" class="lnk" data-goto="${id}">${esc(text)}${sub ? `<span>${esc(sub)}</span>` : ''}</button>`;
 export const kohortLabel = (ctx, k) => fmtDate(new Date(k + 'T12:00:00').getTime());
 export const kohortColor = (ctx, k) => KOHORT_COLORS[ctx.kohorts.indexOf(k) % KOHORT_COLORS.length];
@@ -57,9 +58,10 @@ export function respondentPanel(S, n, compact = false) {
   const sorted = S.idx.map(i => ctx.respondents[i].ya).sort((a, c) => c - a), rank = sorted.indexOf(R.ya) + 1, ties = sorted.filter(v => v === R.ya).length;
   const tidak = ans.map((v, q) => v ? -1 : q).filter(q => q >= 0);
   let h = `<div class="score"><b>${R.ya}<small>/20 Ya</small></b><span><i style="background:${b.color}"></i>${b.label}</span></div>`;
+  h += mk([[R.ya, 'Ya', STATUS.yes], [20 - R.ya, 'Tidak', STATUS.no], [`#${rank}`, `dari ${agg.n}`]]);
   h += `<p class="meta">${esc(R.email)}<br>Mengisi ${fmtTime(R.ts)} · <span class="dotk" style="--c:${kohortColor(ctx, R.kohort)}"></span>kelompok tanggal ${kohortLabel(ctx, R.kohort)}</p>`;
   h += sec('Skor per aspek', hbars(aspekRows(ctx, R.aspekYa.map((y, a) => y / ctx.aspekQ[a].length), mean), { labelW: 100 }), `Garis tegak = rata-rata responden yang tampil (n=${agg.n}). Nilai = ${R.aspekYa.map((y, a) => `${y}/${ctx.aspekQ[a].length}`).join(', ')}.`);
-  h += sec('Jawaban per pernyataan', answerStrip(ans, ctx.questions, ASPEK_COLOR), 'Terisi = Ya, kosong = Tidak. Warna = aspek.');
+  h += sec('Jawaban per pernyataan', answerStrip(ans, ctx.questions, ASPEK_COLOR), '✓ hijau = Ya, ✕ merah = Tidak. Garis kecil di bawah = warna aspek.');
   h += sec(`Dijawab Tidak (${tidak.length})`, tidak.length ? `<ul class="qlist">${tidak.map(q => `<li><b style="color:${ASPEK_COLOR[ctx.questions[q].aspek]}">Q${q + 1}</b> ${esc(ctx.questions[q].text)}</li>`).join('')}</ul>` : '<p class="note">Tidak ada. Semua pernyataan dijawab Ya.</p>');
   h += sec('Posisi dalam kelompok', `<p class="plain">Peringkat ${rank} dari ${agg.n} berdasarkan jumlah Ya${ties > 1 ? ` (seri dengan ${ties - 1} responden lain)` : ''}.</p>` + (compact ? '' : histogram(agg.hist, v => bandOf(v).color, R.ya)));
   const edges = (S.graph.adj.get(n.id) || []).map(e => ({ e, o: e.s === n.id ? e.t : e.s }));
@@ -71,6 +73,7 @@ export function respondentPanel(S, n, compact = false) {
 export function aspekPanel(S, n) {
   const { ctx, agg } = S, a = n.ref, qs = ctx.aspekQ[a], pa = agg.perAspek[a];
   let h = `<div class="score"><b>${pct(pa.pct, 1)}</b><span>Ya, ${pa.ya} dari ${pa.cells} jawaban</span></div>`;
+  h += mk([[pa.ya, 'Ya', STATUS.yes], [pa.cells - pa.ya, 'Tidak', STATUS.no], [agg.n, 'responden']]);
   h += sec(`${qs.length} pernyataan`, hbars(questionRows(ctx, qs, agg.perQ, agg.n), { labelW: 28, rowH: 20 }), 'Arahkan kursor ke batang untuk teks pernyataan.');
   const rows = S.idx.map(i => ({ i, y: ctx.respondents[i].aspekYa[a] })).sort((x, y) => x.y - y.y || ctx.respondents[x.i].nama.localeCompare(ctx.respondents[y.i].nama));
   h += sec('Responden dengan skor terendah pada aspek ini', `<div class="chips">${rows.slice(0, 8).map(r => goto('r' + r.i, ctx.respondents[r.i].nama, `${r.y}/${qs.length}`)).join('')}</div>`);
@@ -79,6 +82,7 @@ export function aspekPanel(S, n) {
 export function questionPanel(S, n) {
   const { ctx, agg } = S, q = n.ref, Q = ctx.questions[q], ya = agg.perQ[q], tidak = S.idx.filter(i => !ctx.ans(i, q));
   let h = `<p class="plain">${esc(Q.text)}</p><div class="score"><b>${pct(agg.n ? ya / agg.n : null, 1)}</b><span><i style="background:${ASPEK_COLOR[Q.aspek]}"></i>${ctx.aspek[Q.aspek]} · Ya ${ya}, Tidak ${agg.n - ya}</span></div>`;
+  h += mk([[ya, 'Ya', STATUS.yes], [agg.n - ya, 'Tidak', STATUS.no]]);
   h += sec(`Menjawab Tidak (${tidak.length})`, tidak.length ? `<div class="chips">${tidak.map(i => goto('r' + i, ctx.respondents[i].nama, `${ctx.respondents[i].ya}/20`)).join('')}</div>` : '<p class="note">Tidak ada.</p>');
   h += sec('Ya per tanggal pengisian', hbars(ctx.kohorts.map(k => { const m = S.idx.filter(i => ctx.respondents[i].kohort === k); const y = m.filter(i => ctx.ans(i, q)).length; return { label: kohortLabel(ctx, k), value: m.length ? y / m.length : null, color: kohortColor(ctx, k), tip: `${kohortLabel(ctx, k)}: ${y} dari ${m.length} Ya` }; }), { labelW: 80 }));
   return h;
@@ -99,7 +103,7 @@ export function panelHead(S, n) {
 /* isi node mengembang */
 export function nodeBody(S, n) {
   const { ctx } = S;
-  if (n.type === 'r') { const R = ctx.respondents[n.ref]; return { chip: R.nama.split(/\s+/).slice(0, 2).map(w => w[0]).join('').toUpperCase(), title: esc(R.nama), sub: `${R.ya}/20 Ya · ${n.deg} relasi`, html: respondentPanel(S, n, true) }; }
+  if (n.type === 'r') { const R = ctx.respondents[n.ref]; return { chip: initials(R.nama), title: esc(R.nama), sub: `${R.ya}/20 Ya · ${n.deg} relasi`, html: respondentPanel(S, n, true) }; }
   if (n.type === 'a') return { chip: 'A', title: esc(ctx.aspek[n.ref]), sub: `${ctx.aspekQ[n.ref].length} pernyataan · ${n.deg} responden terhubung`, html: aspekPanel(S, n) };
   return { chip: 'Q' + (n.ref + 1), title: `Pernyataan ${n.ref + 1}`, sub: `${ctx.aspek[ctx.questions[n.ref].aspek]} · ${n.deg} menjawab Tidak`, html: questionPanel(S, n) };
 }

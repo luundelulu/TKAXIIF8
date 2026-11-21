@@ -1,11 +1,23 @@
 /* Statistik, filter, dan pembangunan graf. Semua angka dihitung dari model hasil worker. */
-export const ASPEK_COLOR = ['#8B5CF6', '#EC4899', '#FB923C'];
+/* Palet default kontras tinggi. Array/objek ini dimutasi di tempat oleh theme.js (kustomisasi warna). */
+export const ASPEK_COLOR = ['#7C3AED', '#DB2777', '#B45309'];
 export const BANDS = [
-  { id: 'full', label: '20 Ya', test: y => y === 20, color: '#4C3D9E' },
-  { id: 'high', label: '16–19 Ya', test: y => y >= 16 && y < 20, color: '#8F85C9' },
-  { id: 'low', label: '≤15 Ya', test: y => y <= 15, color: '#D4CFEA' }
+  { id: 'full', label: '20 Ya', test: y => y === 20, color: '#047857' },
+  { id: 'high', label: '16–19 Ya', test: y => y >= 16 && y < 20, color: '#1D4ED8' },
+  { id: 'low', label: '≤15 Ya', test: y => y <= 15, color: '#C2410C' }
 ];
-export const KOHORT_COLORS = ['#8B5CF6', '#EC4899', '#FB923C', '#64748B'];
+export const KOHORT_COLORS = ['#6D28D9', '#BE185D', '#B45309', '#334155'];
+export const STATUS = { yes: '#047857', no: '#B91C1C' };
+
+/* Inisial dari SEMUA kata nama (maks 4 huruf agar muat di node): Santi Turyana Ali -> STA */
+export const initials = nama => {
+  const w = String(nama || '').split(/\s+/).filter(Boolean).map(x => [...x][0]).join('').toUpperCase();
+  return w.length > 4 ? w.slice(0, 4) : w;
+};
+/* Warna teks (putih/gelap) yang paling kontras terhadap latar hex */
+const lum = hex => { const h = hex.replace('#', ''), v = [0, 2, 4].map(i => parseInt(h.substr(i, 2), 16) / 255).map(c => c <= .03928 ? c / 12.92 : ((c + .055) / 1.055) ** 2.4); return .2126 * v[0] + .7152 * v[1] + .0722 * v[2]; };
+export const contrast = (a, b) => { const x = lum(a), y = lum(b); return (Math.max(x, y) + .05) / (Math.min(x, y) + .05); };
+export const inkOn = bg => contrast(bg, '#FFFFFF') >= contrast(bg, '#14141C') ? '#FFFFFF' : '#14141C';
 export const bandOf = y => BANDS.find(b => b.test(y));
 
 export function buildContext(model) {

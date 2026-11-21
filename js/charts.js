@@ -1,3 +1,4 @@
+import { STATUS } from './stats.js';
 /* Chart SVG kecil tanpa library. Teks memakai token ink, bukan warna seri. Tooltip via atribut data-tip. */
 export const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const W = 340;
@@ -77,8 +78,11 @@ export function bubbleScatter(points, { xLabel, yLabel, steps = 5 }) {
 /* Strip 20 jawaban satu responden. */
 export function answerStrip(ans, qs, colors) {
   const cw = (W - 19 * 3) / 20;
-  const body = ans.map((v, i) => `<g class="hit" data-tip="${esc(`Q${i + 1} · ${v ? 'Ya' : 'Tidak'} — ${qs[i].text}`)}">
-    <rect x="${i * (cw + 3)}" y="0" width="${cw}" height="22" rx="4" fill="${v ? colors[qs[i].aspek] : 'transparent'}" ${v ? '' : `class="no" stroke-width="1.5"`}/>
-    <text x="${i * (cw + 3) + cw / 2}" y="35" text-anchor="middle" class="t-ax">${i + 1}</text></g>`).join('');
-  return svg(40, body, 'Jawaban per pertanyaan');
+  const body = ans.map((v, i) => { const x = i * (cw + 3);
+    return `<g class="hit" data-tip="${esc(`Q${i + 1} · ${v ? 'Ya' : 'Tidak'} — ${qs[i].text}`)}">
+    <rect x="${x}" y="0" width="${cw}" height="22" rx="4" fill="${v ? STATUS.yes : STATUS.no}"/>
+    <text x="${x + cw / 2}" y="15.5" text-anchor="middle" class="t-mark">${v ? '✓' : '✕'}</text>
+    <rect x="${x}" y="25" width="${cw}" height="3" rx="1.5" fill="${colors[qs[i].aspek]}"/>
+    <text x="${x + cw / 2}" y="40" text-anchor="middle" class="t-ax">${i + 1}</text></g>`; }).join('');
+  return svg(46, body, 'Jawaban per pertanyaan: ✓ Ya, ✕ Tidak. Garis kecil di bawah = warna aspek');
 }

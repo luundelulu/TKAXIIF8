@@ -3,10 +3,13 @@ import { buildContext, defaultFilters, filtersActive, visibleIndices, aggregate,
 import { panelFor, panelHead, nodeBody, kohortLabel, kohortColor } from './panel.js';
 import { respondentsView, relationsView, dataView } from './views.js';
 import { esc, pct } from './charts.js';
+import { initTheme, themeSection, themeEvent } from './theme.js';
 
 const $ = (s, r = document) => r.querySelector(s);
 const S = { mode: 'aspek', colorMode: 'band', sizeMode: 'deg', scatter: { x: 0, y: 1 }, tab: 'graph', sort: { key: 'ya', dir: -1 }, dataQ: '' };
 let G, panelKey = '';
+initTheme(rebuild => { if (!G) return; if (rebuild) buildPopovers(); G.refreshLabels(); refresh(); keepOpen(); });
+const keepOpen = () => { if (S.popOpen) { const p = $(S.popOpen); if (p) p.hidden = false; } };
 
 /* ---------------- boot ---------------- */
 const worker = new Worker(new URL('worker.js', import.meta.url));
@@ -31,8 +34,8 @@ function init() {
     mode: () => S.mode,
     colorOf: n => S.colorMode === 'band' ? bandOf(ctx.respondents[n.ref].ya).color : kohortColor(ctx, ctx.respondents[n.ref].kohort),
     label: n => n.type === 'a'
-      ? { t: esc(ctx.aspek[n.ref]), s: pct(S.agg.perAspek[n.ref].pct, 0) + ' Ya', color: ASPEK_COLOR[n.ref], aria: ctx.aspek[n.ref] }
-      : { t: 'Q' + (n.ref + 1), s: pct(S.agg.n ? S.agg.perQ[n.ref] / S.agg.n : null, 0) + ' Ya', color: ASPEK_COLOR[ctx.questions[n.ref].aspek], aria: `Pernyataan ${n.ref + 1}: ${ctx.questions[n.ref].text}` },
+      ? { t: esc(ctx.aspek[n.ref]), s: pct(S.agg.perAspek[n.ref].pct, 0) + ' Ya', p: S.agg.perAspek[n.ref].pct, color: ASPEK_COLOR[n.ref], aria: ctx.aspek[n.ref] }
+      : { t: 'Q' + (n.ref + 1), s: pct(S.agg.n ? S.agg.perQ[n.ref] / S.agg.n : null, 0) + ' Ya', p: S.agg.n ? S.agg.perQ[n.ref] / S.agg.n : null, color: ASPEK_COLOR[ctx.questions[n.ref].aspek], aria: `Pernyataan ${n.ref + 1}: ${ctx.questions[n.ref].text}` },
     body: n => nodeBody(S, n),
     onSelect: () => { renderPanel(); },
     onFocus: id => { S.focused = id; renderState(); },
@@ -71,9 +74,10 @@ function renderLegend() {
   const col = S.colorMode === 'band'
     ? `<h4>Warna node: jumlah Ya</h4><ul>${agg.bands.map(b => sw(b.color, b.label, b.n)).join('')}</ul>`
     : `<h4>Warna node: tanggal isi</h4><ul>${ctx.kohorts.map(k => sw(kohortColor(ctx, k), kohortLabel(ctx, k), S.idx.filter(i => ctx.respondents[i].kohort === k).length)).join('')}</ul>`;
+  const ring = '<br>Cincin di node = jumlah Ya dari 20';
   const size = S.sizeMode === 'deg' ? 'Ukuran = jumlah relasi' : S.sizeMode === 'skor' ? 'Ukuran = jumlah Ya' : 'Ukuran seragam';
   const edge = S.mode === 'aspek' ? 'Tebal garis = skor aspek' : S.mode === 'mirip' ? 'Tebal garis = kemiripan jawaban' : 'Garis = jawaban Tidak';
-  $('#legend').innerHTML = `${col}<p>${size}<br>${edge}</p><p class="hint">${MODES[S.mode].hint}</p>`;
+  $('#legend').innerHTML = `${col}<p>${size}${ring}<br>${edge}</p><p class="hint">${MODES[S.mode].hint}</p>`;
 }
 function updateFilterBadge() {
   const f = S.filters, c = S.ctx; let k = 0;
@@ -114,7 +118,7 @@ function buildPopovers() {
   $('#popFilter').innerHTML = `<div class="ph2"><strong>Filter</strong><button class="lnk" data-act="clear">Hapus semua filter</button></div>
   <fieldset><legend>Tanggal pengisian</legend>${ctx.kohorts.map(k => chk('kohort', k, kohortLabel(ctx, k), f.kohort.has(k), `<small>${ctx.respondents.filter(r => r.kohort === k).length}</small>`)).join('')}</fieldset>
   <fieldset><legend>Rentang jumlah Ya</legend>${BANDS.map(b => chk('band', b.id, `<i class="sw" style="background:${b.color}"></i>${b.label}`, f.band.has(b.id), `<small>${ctx.respondents.filter(r => b.test(r.ya)).length}</small>`)).join('')}</fieldset>
-  <fieldset><legend>Menjawab Tidak pada</legend><div class="qgrid">${ctx.questions.map((q, i) => `<label class="qc" title="${esc(q.text)}"><input type="checkbox" data-f="tidakQ" value="${i}" ${f.tidakQ.has(i) ? 'checked' : ''}><span style="--c:${ASPEK_COLOR[q.aspek]}">Q${i + 1}</span></label>`).join('')}</div><p class="note">Menampilkan responden yang menjawab Tidak pada salah satu yang dipilih.</p></fieldset>
+  <fieldset><legend>Menjawab Tidak pada</legend><div class="asp-tg" role="group" aria-label="Pilih per aspek">${ctx.aspek.map((a, ai) => { const qs = ctx.aspekQ[ai], k = qs.filter(q => f.tidakQ.has(q)).length, st = k === qs.length ? 'on' : k ? 'part' : 'off'; return `<button type="button" class="at" data-asp="${ai}" data-state="${st}" aria-pressed="${st === 'on'}" style="--c:${ASPEK_COLOR[ai]}">${esc(a)}<small>${st === 'on' ? 'aktif' : st === 'part' ? k + '/' + qs.length : 'nonaktif'}</small></button>`; }).join('')}</div><div class="qgrid">${ctx.questions.map((q, i) => `<label class="qc" title="${esc(q.text)}"><input type="checkbox" data-f="tidakQ" value="${i}" ${f.tidakQ.has(i) ? 'checked' : ''}><span style="--c:${ASPEK_COLOR[q.aspek]}">Q${i + 1}</span></label>`).join('')}</div><p class="note">Menampilkan responden yang menjawab Tidak pada salah satu yang dipilih.</p></fieldset>
   ${S.mode === 'aspek' ? `<fieldset><legend>Ambang relasi aspek</legend><label class="rg">Garis tampil bila Ya ≥ <b id="vAsp">${f.minAspekYa}</b><input type="range" data-f="minAspekYa" min="1" max="10" step="1" value="${f.minAspekYa}"></label></fieldset>` : ''}
   ${S.mode === 'mirip' ? `<fieldset><legend>Ambang kemiripan</legend><label class="rg">Jawaban identik ≥ <b id="vSim">${Math.round(f.minSim * 100)}%</b><input type="range" data-f="minSim" min="0.5" max="1" step="0.05" value="${f.minSim}"></label></fieldset>` : ''}`;
   $('#popSet').innerHTML = `<div class="ph2"><strong>Pengaturan</strong></div>
@@ -122,15 +126,23 @@ function buildPopovers() {
   <fieldset><legend>Warna node</legend><label class="ck"><input type="radio" name="col" data-s="color" value="band" ${S.colorMode === 'band' ? 'checked' : ''}><span>Jumlah Ya</span></label><label class="ck"><input type="radio" name="col" data-s="color" value="kohort" ${S.colorMode === 'kohort' ? 'checked' : ''}><span>Tanggal pengisian</span></label></fieldset>
   <fieldset><legend>Ukuran node responden</legend>${[['deg', 'Jumlah relasi'], ['skor', 'Jumlah Ya'], ['flat', 'Seragam']].map(([v, l]) => `<label class="ck"><input type="radio" name="sz" data-s="size" value="${v}" ${S.sizeMode === v ? 'checked' : ''}><span>${l}</span></label>`).join('')}</fieldset>
   <fieldset><legend>Gerak</legend><label class="ck"><input type="checkbox" data-s="reduce" ${G.reduced ? 'checked' : ''}><span>Kurangi animasi</span></label></fieldset>
-  <button class="btn wide" data-act="unpin">Lepas semua pin posisi</button>`;
+  <button class="btn wide" data-act="unpin">Lepas semua pin posisi</button>
+  ${themeSection()}`;
 }
 
+/* Perbarui status tombol aspek tanpa membangun ulang popover (fokus keyboard tetap) */
+function syncAsp() {
+  document.querySelectorAll('#popFilter .at').forEach(b => {
+    const qs = S.ctx.aspekQ[+b.dataset.asp], k = qs.filter(q => S.filters.tidakQ.has(q)).length, st = k === qs.length ? 'on' : k ? 'part' : 'off';
+    b.dataset.state = st; b.setAttribute('aria-pressed', String(st === 'on')); b.querySelector('small').textContent = st === 'on' ? 'aktif' : st === 'part' ? k + '/' + qs.length : 'nonaktif';
+  });
+}
 function bindUI() {
   /* popover */
   const pops = [['#bFilter', '#popFilter'], ['#bSet', '#popSet']];
-  const closePops = () => pops.forEach(([b, p]) => { $(p).hidden = true; $(b).setAttribute('aria-expanded', 'false'); });
-  pops.forEach(([b, p]) => $(b).addEventListener('click', e => { e.stopPropagation(); const open = $(p).hidden; closePops(); $(p).hidden = !open; $(b).setAttribute('aria-expanded', String(open)); }));
-  document.addEventListener('click', e => { if (!e.target.closest('.pop') && !e.target.closest('.acts')) closePops(); if (!e.target.closest('.search')) closeRes(); });
+  const closePops = () => { S.popOpen = null; pops.forEach(([b, p]) => { $(p).hidden = true; $(b).setAttribute('aria-expanded', 'false'); }); };
+  pops.forEach(([b, p]) => $(b).addEventListener('click', e => { e.stopPropagation(); const open = $(p).hidden; closePops(); S.popOpen = open ? p : null; $(p).hidden = !open; $(b).setAttribute('aria-expanded', String(open)); }));
+  document.addEventListener('click', e => { if (e.target.isConnected && !e.target.closest('.pop') && !e.target.closest('.acts')) closePops(); if (!e.target.closest('.search')) closeRes(); });
   $('#popFilter').addEventListener('input', e => {
     const t = e.target, k = t.dataset.f; if (!k) return;
     const f = S.filters;
@@ -138,6 +150,11 @@ function bindUI() {
     else { const set = f[k], v = k === 'tidakQ' ? +t.value : t.value; t.checked ? set.add(v) : set.delete(v); }
     refresh();
   });
+  $('#popFilter').addEventListener('click', e => {
+    const at = e.target.closest('[data-asp]');
+    if (at) { const qs = S.ctx.aspekQ[+at.dataset.asp], all = qs.every(q => S.filters.tidakQ.has(q)); qs.forEach(q => all ? S.filters.tidakQ.delete(q) : S.filters.tidakQ.add(q)); refresh(); document.querySelectorAll('#popFilter .qc input').forEach(i => { i.checked = S.filters.tidakQ.has(+i.value); }); syncAsp(); }
+  });
+  $('#popFilter').addEventListener('input', e => { if (e.target.dataset.f === 'tidakQ') syncAsp(); });
   $('#popFilter').addEventListener('click', e => { if (e.target.dataset.act === 'clear') { S.filters = defaultFilters(S.ctx); buildPopovers(); refresh(); $('#popFilter').hidden = false; } });
   $('#popSet').addEventListener('change', e => {
     const t = e.target, s = t.dataset.s; if (!s) return;
@@ -146,7 +163,8 @@ function bindUI() {
     if (s === 'size') { S.sizeMode = t.value; G.sizeMode = t.value; G.setData(S.graph); renderLegend(); }
     if (s === 'reduce') { G.reduced = t.checked; document.body.classList.toggle('reduced', t.checked); }
   });
-  $('#popSet').addEventListener('click', e => { if (e.target.dataset.act === 'unpin') { G.unpinAll(); } });
+  $('#popSet').addEventListener('click', e => { if (themeEvent(e)) return; if (e.target.dataset.act === 'unpin') { G.unpinAll(); } });
+  $('#popSet').addEventListener('input', e => { themeEvent(e); });
 
   /* zoom */
   $('#zIn').onclick = () => G.zoomBy(1.25); $('#zOut').onclick = () => G.zoomBy(0.8); $('#zFit').onclick = () => G.reset(); $('#zPin').onclick = () => G.unpinAll();
