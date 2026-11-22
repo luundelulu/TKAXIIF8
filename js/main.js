@@ -10,6 +10,9 @@ const $ = (s, r = document) => r.querySelector(s);
 const S = { lineMode: 'all', mode: 'aspek', colorMode: 'band', sizeMode: 'deg', scatter: { x: 0, y: 1 }, tab: 'graph', sort: { key: 'ya', dir: -1 }, dataQ: '' };
 let G, panelKey = '';
 initHaptics();
+/* tinggi header dipakai CSS agar panel analitik + tombol tutup selalu muat di bawahnya */
+const setHdr = () => { const t = document.querySelector('.top'); if (t) document.documentElement.style.setProperty('--hdr', t.offsetHeight + 'px'); };
+addEventListener('resize', setHdr); addEventListener('load', setHdr); document.fonts?.ready.then(setHdr); if (window.ResizeObserver) new ResizeObserver(setHdr).observe(document.documentElement);
 initTheme(rebuild => { if (!G) return; if (rebuild) { const o = $('#popTheme'), keep = o.scrollTop; buildPopovers(); o.scrollTop = keep; } G.refreshLabels(); refresh(); keepOpen(); });
 const keepOpen = () => { if (S.popOpen) { const p = $(S.popOpen); if (p) p.hidden = false; } };
 
@@ -43,7 +46,7 @@ function init() {
     onFocus: id => { S.focused = id; renderState(); },
     onPins: c => { $('#zPin').hidden = !c; }
   });
-  buildModeSeg(); buildPopovers(); bindUI();
+  buildModeSeg(); buildPopovers(); bindUI(); setHdr();
   $('#boot').remove();
   refresh();
   window.__app = { S, G };

@@ -335,3 +335,35 @@ select { height: 30px; border: 1px solid var(--line2); border-radius: 8px; backg
 .brand small#sub { display: flex; flex-wrap: wrap; align-items: center; gap: 2px 8px; margin-top: 3px; }
 .kelas { display: inline; color: var(--ink); font-weight: 700; font-size: 12.5px; white-space: nowrap; }
 @media (max-width: 860px) { .brand small#sub { display: flex; } .brand { flex: 1 1 100%; } }
+
+/* ===== Mobile: header ringkas + toolbar vertikal melayang di atas kanvas ===== */
+.btn .ic { flex: none; }
+@media (max-width: 860px) {
+  .top { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: 6px 8px; padding: 6px 10px 8px; }
+  .top > .brand { grid-column: 1 / -1; grid-row: 1; flex: none; }
+  .top > .seg { grid-column: 1; grid-row: 2; justify-self: start; }
+  .top > .search { grid-column: 2; grid-row: 2; order: 0; flex: none; max-width: none; width: 100%; min-width: 0; }
+  .search input { height: 34px; }
+  #qres { left: auto; right: 0; width: min(340px, calc(100vw - 20px)); }
+  .seg button { padding: 5px 8px; font-size: 13px; }
+  .brand strong { font-size: 15px; }
+  .brand small#sub { font-size: 11.5px; margin-top: 1px; }
+
+  /* tab graf: tombol bertumpuk vertikal di sisi kanan kanvas (di bawah label status) */
+  .top > .acts { position: absolute; top: calc(100% + 56px); right: 10px; margin: 0; flex-direction: column; gap: 6px; z-index: 15; }
+  .acts .btn { position: relative; width: 52px; height: 52px; padding: 0; flex-direction: column; justify-content: center; gap: 2px; border-radius: 14px; font-size: 10px; font-weight: 600; box-shadow: var(--sh1); background: rgb(255 255 255 / .96); }
+  .acts .btn .tdot { width: 18px; height: 18px; }
+  .acts .btn .cnt { position: absolute; top: -5px; right: -5px; min-width: 18px; }
+  /* tab lain: tombol kembali sebagai baris di bawah kepala halaman */
+  body[data-tab]:not([data-tab=graph]) .top > .acts { position: static; grid-column: 1 / -1; grid-row: 3; flex-direction: row; justify-content: flex-end; }
+  body[data-tab]:not([data-tab=graph]) .acts .btn { width: auto; height: 34px; padding: 0 12px; flex-direction: row; gap: 7px; font-size: 13px; font-weight: 500; box-shadow: none; }
+
+  /* panel analitik: tinggi dibatasi, bar "Tutup" selalu di atas header */
+  :root { --sheetH: min(60vh, calc(100dvh - var(--hdr, 130px) - var(--tabh) - 46px - 8px)); }
+  body:has(.side.open) .fab { z-index: 80; }
+}
+@media (min-width: 861px) { .btn .ic { width: 16px; height: 16px; } }
+@media (max-width: 860px) {
+  body:has(.side.open) .top > .acts { visibility: hidden; }
+  .acts .btn { width: 56px; }
+}
