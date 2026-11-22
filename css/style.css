@@ -336,34 +336,42 @@ select { height: 30px; border: 1px solid var(--line2); border-radius: 8px; backg
 .kelas { display: inline; color: var(--ink); font-weight: 700; font-size: 12.5px; white-space: nowrap; }
 @media (max-width: 860px) { .brand small#sub { display: flex; } .brand { flex: 1 1 100%; } }
 
-/* ===== Mobile: header ringkas + toolbar vertikal melayang di atas kanvas ===== */
+/* ===== Tanpa seleksi teks (kecuali kolom isian) ===== */
+html, body { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; -webkit-tap-highlight-color: transparent; }
+input, textarea, select, [contenteditable] { -webkit-user-select: text; user-select: text; }
+
+/* ===== Tombol kembali di popover ===== */
+.pback { display: none; align-items: center; gap: 4px; height: 32px; padding: 0 10px 0 6px; margin-right: 8px; border: 1px solid var(--line2); border-radius: 9px; background: #fff; font-size: 13px; font-weight: 600; color: var(--ink); }
+.pback::first-letter { font-size: 20px; line-height: 1; }
+.ph2 strong { margin-right: auto; }
+
 .btn .ic { flex: none; }
+@media (min-width: 861px) { .btn .ic { width: 16px; height: 16px; } }
+
+/* ===== Mobile ===== */
 @media (max-width: 860px) {
-  .top { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: 6px 8px; padding: 6px 10px 8px; }
-  .top > .brand { grid-column: 1 / -1; grid-row: 1; flex: none; }
-  .top > .seg { grid-column: 1; grid-row: 2; justify-self: start; }
-  .top > .search { grid-column: 2; grid-row: 2; order: 0; flex: none; max-width: none; width: 100%; min-width: 0; }
+  .top { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: start; gap: 6px 10px; padding: 8px 10px 10px; }
+  .top > .brand { grid-column: 1; grid-row: 1; flex: none; }
+  .top > .seg { grid-column: 1; grid-row: 2; justify-self: start; max-width: 100%; }
+  .top > .search { grid-column: 1; grid-row: 3; order: 0; flex: none; max-width: none; width: 100%; min-width: 0; }
+  .top > .acts { grid-column: 2; grid-row: 1 / span 3; margin: 0; flex-direction: column; gap: 5px; align-self: start; }
+  .acts .btn { width: 100%; height: 30px; padding: 0 10px; justify-content: flex-start; gap: 6px; font-size: 12px; font-weight: 600; border-radius: 9px; box-shadow: none; }
+  .acts .btn .ic { width: 15px; height: 15px; } .acts .btn .tdot { width: 14px; height: 14px; }
+  .acts .btn .cnt { min-width: 16px; height: 16px; font-size: 10px; margin-left: auto; }
   .search input { height: 34px; }
-  #qres { left: auto; right: 0; width: min(340px, calc(100vw - 20px)); }
+  #qres { left: 0; right: 0; width: auto; }
   .seg button { padding: 5px 8px; font-size: 13px; }
   .brand strong { font-size: 15px; }
   .brand small#sub { font-size: 11.5px; margin-top: 1px; }
 
-  /* tab graf: tombol bertumpuk vertikal di sisi kanan kanvas (di bawah label status) */
-  .top > .acts { position: absolute; top: calc(100% + 56px); right: 10px; margin: 0; flex-direction: column; gap: 6px; z-index: 15; }
-  .acts .btn { position: relative; width: 52px; height: 52px; padding: 0; flex-direction: column; justify-content: center; gap: 2px; border-radius: 14px; font-size: 10px; font-weight: 600; box-shadow: var(--sh1); background: rgb(255 255 255 / .96); }
-  .acts .btn .tdot { width: 18px; height: 18px; }
-  .acts .btn .cnt { position: absolute; top: -5px; right: -5px; min-width: 18px; }
-  /* tab lain: tombol kembali sebagai baris di bawah kepala halaman */
-  body[data-tab]:not([data-tab=graph]) .top > .acts { position: static; grid-column: 1 / -1; grid-row: 3; flex-direction: row; justify-content: flex-end; }
-  body[data-tab]:not([data-tab=graph]) .acts .btn { width: auto; height: 34px; padding: 0 12px; flex-direction: row; gap: 7px; font-size: 13px; font-weight: 500; box-shadow: none; }
+  .pback { display: inline-flex; }
+  .ph2 { position: sticky; top: -14px; z-index: 2; background: #fff; align-items: center; padding: 14px 0 8px; margin: -14px 0 6px; }
 
-  /* panel analitik: tinggi dibatasi, bar "Tutup" selalu di atas header */
+  .legend { left: 10px; bottom: 58px; max-width: calc(100% - 20px); padding: 5px 10px; border-radius: 999px; pointer-events: none; font-size: 11px; }
+  .legend h4, .legend p, .legend .hint { display: none; }
+  .legend ul { display: flex; flex-wrap: wrap; gap: 2px 12px; margin: 0; }
+  .legend li b { display: none; }
+
   :root { --sheetH: min(60vh, calc(100dvh - var(--hdr, 130px) - var(--tabh) - 46px - 8px)); }
   body:has(.side.open) .fab { z-index: 80; }
-}
-@media (min-width: 861px) { .btn .ic { width: 16px; height: 16px; } }
-@media (max-width: 860px) {
-  body:has(.side.open) .top > .acts { visibility: hidden; }
-  .acts .btn { width: 56px; }
 }

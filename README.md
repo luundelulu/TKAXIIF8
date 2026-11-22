@@ -73,3 +73,5 @@ klik ganda: fokus tetangga · seret node: pindah dan dikunci (Lepas pin di Penga
 - **Mobile**: lembar "Lihat analitik" di bawah menggantikan tombol melayang.
 - **Tema** kini tombol sendiri (Tema · Filter · Pengaturan). Getaran (Vibration API) di semua tombol; bisa dimatikan di Pengaturan. iOS Safari tidak mendukung API ini.
 - Kredit berupa strip tipis di atas navbar bawah (tidak menimpa konten); mengambang hanya di graf versi desktop.
+- **Deploy**: workflow baru `.github/workflows/pages.yml` (job `build` + `deploy`, `needs: build`).
+- Mobile: tombol Tema/Filter/Pengaturan di header (1 kolom), tombol Kembali di tiap popover (Back HP juga menutup), legenda ringkas, teks tidak bisa diseleksi.

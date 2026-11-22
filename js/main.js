@@ -120,20 +120,20 @@ function buildModeSeg() {
 function buildPopovers() {
   const { ctx } = S, f = S.filters;
   const chk = (name, val, label, on, extra = '') => `<label class="ck"><input type="checkbox" data-f="${name}" value="${val}" ${on ? 'checked' : ''}><span>${label}${extra}</span></label>`;
-  $('#popFilter').innerHTML = `<div class="ph2"><strong>Filter</strong><button class="lnk" data-act="clear">Hapus semua filter</button></div>
+  $('#popFilter').innerHTML = `<div class="ph2"><button type="button" class="pback" data-act="pop-back" aria-label="Kembali">‹<span>Kembali</span></button><strong>Filter</strong><button class="lnk" data-act="clear">Hapus semua filter</button></div>
   <fieldset><legend>Tanggal pengisian</legend>${ctx.kohorts.map(k => chk('kohort', k, kohortLabel(ctx, k), f.kohort.has(k), `<small>${ctx.respondents.filter(r => r.kohort === k).length}</small>`)).join('')}</fieldset>
   <fieldset><legend>Rentang jumlah Ya</legend>${BANDS.map(b => chk('band', b.id, `<i class="sw" style="background:${b.color}"></i>${b.label}`, f.band.has(b.id), `<small>${ctx.respondents.filter(r => b.test(r.ya)).length}</small>`)).join('')}</fieldset>
   <fieldset><legend>Menjawab Tidak pada</legend><div class="asp-tg" role="group" aria-label="Pilih per aspek">${ctx.aspek.map((a, ai) => { const qs = ctx.aspekQ[ai], k = qs.filter(q => f.tidakQ.has(q)).length, st = k === qs.length ? 'on' : k ? 'part' : 'off'; return `<button type="button" class="at" data-asp="${ai}" data-state="${st}" aria-pressed="${st === 'on'}" style="--c:${ASPEK_COLOR[ai]}">${esc(a)}<small>${st === 'on' ? 'aktif' : st === 'part' ? k + '/' + qs.length : 'nonaktif'}</small></button>`; }).join('')}</div><div class="qgrid">${ctx.questions.map((q, i) => `<label class="qc" title="${esc(q.text)}"><input type="checkbox" data-f="tidakQ" value="${i}" ${f.tidakQ.has(i) ? 'checked' : ''}><span style="--c:${ASPEK_COLOR[q.aspek]}">Q${i + 1}</span></label>`).join('')}</div><p class="note">Menampilkan responden yang menjawab Tidak pada salah satu yang dipilih.</p></fieldset>
   ${S.mode === 'aspek' ? `<fieldset><legend>Ambang relasi aspek</legend><label class="rg">Garis tampil bila Ya ≥ <b id="vAsp">${f.minAspekYa}</b><input type="range" data-f="minAspekYa" min="1" max="10" step="1" value="${f.minAspekYa}"></label></fieldset>` : ''}
   ${S.mode === 'mirip' ? `<fieldset><legend>Ambang kemiripan</legend><label class="rg">Jawaban identik ≥ <b id="vSim">${Math.round(f.minSim * 100)}%</b><input type="range" data-f="minSim" min="0.5" max="1" step="0.05" value="${f.minSim}"></label></fieldset>` : ''}`;
-  $('#popSet').innerHTML = `<div class="ph2"><strong>Pengaturan</strong></div>
+  $('#popSet').innerHTML = `<div class="ph2"><button type="button" class="pback" data-act="pop-back" aria-label="Kembali">‹<span>Kembali</span></button><strong>Pengaturan</strong></div>
   <fieldset><legend>Perluasan node</legend><label class="ck"><input type="radio" name="multi" data-s="multi" value="0" ${!G.multi ? 'checked' : ''}><span>Satu node</span></label><label class="ck"><input type="radio" name="multi" data-s="multi" value="1" ${G.multi ? 'checked' : ''}><span>Beberapa node sekaligus</span></label></fieldset>
   <fieldset><legend>Warna node</legend><label class="ck"><input type="radio" name="col" data-s="color" value="band" ${S.colorMode === 'band' ? 'checked' : ''}><span>Jumlah Ya</span></label><label class="ck"><input type="radio" name="col" data-s="color" value="kohort" ${S.colorMode === 'kohort' ? 'checked' : ''}><span>Tanggal pengisian</span></label></fieldset>
   <fieldset><legend>Ukuran node responden</legend>${[['deg', 'Jumlah relasi'], ['skor', 'Jumlah Ya'], ['flat', 'Seragam']].map(([v, l]) => `<label class="ck"><input type="radio" name="sz" data-s="size" value="${v}" ${S.sizeMode === v ? 'checked' : ''}><span>${l}</span></label>`).join('')}</fieldset>
   <fieldset><legend>Gerak</legend><label class="ck"><input type="checkbox" data-s="reduce" ${G.reduced ? 'checked' : ''}><span>Kurangi animasi</span></label></fieldset>
   <button class="btn wide" data-act="unpin">Lepas semua pin posisi</button>
   <fieldset><legend>Getaran</legend><label class="ck"><input type="checkbox" data-s="haptic" ${hapticOn() ? 'checked' : ''}><span>Getar halus saat menekan tombol <small>(HP Android)</small></span></label></fieldset>`;
-  $('#popTheme').innerHTML = `<div class="ph2"><strong>Tema warna</strong></div>${themeSection()}`;
+  $('#popTheme').innerHTML = `<div class="ph2"><button type="button" class="pback" data-act="pop-back" aria-label="Kembali">‹<span>Kembali</span></button><strong>Tema warna</strong></div>${themeSection()}`;
 }
 
 /* Perbarui status tombol aspek tanpa membangun ulang popover (fokus keyboard tetap) */
@@ -146,8 +146,11 @@ function syncAsp() {
 function bindUI() {
   /* popover */
   const pops = [['#bTheme', '#popTheme'], ['#bFilter', '#popFilter'], ['#bSet', '#popSet']];
-  const closePops = () => { S.popOpen = null; pops.forEach(([b, p]) => { $(p).hidden = true; $(b).setAttribute('aria-expanded', 'false'); }); };
-  pops.forEach(([b, p]) => $(b).addEventListener('click', e => { e.stopPropagation(); const open = $(p).hidden; closePops(); S.popOpen = open ? p : null; $(p).hidden = !open; $(b).setAttribute('aria-expanded', String(open)); }));
+  let popPushed = false; /* satu entri riwayat saat popover terbuka, agar tombol Back HP menutup popover */
+  const closePops = keep => { S.popOpen = null; pops.forEach(([b, p]) => { $(p).hidden = true; $(b).setAttribute('aria-expanded', 'false'); }); if (popPushed && keep !== true) { popPushed = false; history.back(); } };
+  addEventListener('popstate', () => { if (popPushed) { popPushed = false; closePops(true); } });
+  document.addEventListener('click', e => { if (e.target.closest('[data-act=pop-back]')) closePops(); });
+  pops.forEach(([b, p]) => $(b).addEventListener('click', e => { e.stopPropagation(); const open = $(p).hidden; closePops(true); if (open && !popPushed) { history.pushState({ pop: 1 }, ''); popPushed = true; } else if (!open && popPushed) { popPushed = false; history.back(); } S.popOpen = open ? p : null; $(p).hidden = !open; $(b).setAttribute('aria-expanded', String(open)); }));
   document.addEventListener('click', e => { if (e.target.isConnected && !e.target.closest('.pop') && !e.target.closest('.acts')) closePops(); if (!e.target.closest('.search')) closeRes(); });
   $('#popFilter').addEventListener('input', e => {
     const t = e.target, k = t.dataset.f; if (!k) return;
